@@ -13,32 +13,26 @@
 # limitations under the License.
 #
 
-from test_variables import AUTH_URL
-from test_variables import HEAT_ENDPOINT
-from test_variables import PASSWORD
-from test_variables import TENANT_NAME
-from test_variables import USERNAME
-
 import time
 
 from heatclient.v1.client import Client as HeatClient
 from keystoneclient.v2_0 import client as KeystoneClient
 
+from pytest import symbols as symbols_data
 
-TESTSTACKNAME = 'func_test_stack'
 
 
 class HeatClientMgr(object):
     '''Heat client class to manage a stack.'''
     def __init__(self):
         keystone = KeystoneClient.Client(
-            username=USERNAME,
-            password=PASSWORD,
-            tenant_name=TENANT_NAME,
-            auth_url=AUTH_URL
+            username=symbols_data.username,
+            password=symbols_data.password,
+            tenant_name=symbols_data.tenant_name,
+            auth_url=symbols_data.auth_url
         )
         token = keystone.auth_ref['token']['id']
-        self.client = HeatClient(endpoint=HEAT_ENDPOINT, token=token)
+        self.client = HeatClient(endpoint=symbols_data.heat_endpoint, token=token)
 
     def get_stack_status(self, stack_id):
         '''Return stack status.'''
@@ -69,7 +63,7 @@ class HeatClientMgr(object):
 
     def create_stack(self, **kwargs):
         '''Create stack with kwargs.'''
-        name = kwargs.pop('stack_name', TESTSTACKNAME)
+        name = kwargs.pop('stack_name', symbols_data.teststackname)
         template = kwargs['template']
         parameters = kwargs.get('parameters', {})
         self.client.stacks.create(
@@ -84,7 +78,7 @@ class HeatClientMgr(object):
         )
         return self.client.stacks.get(name)
 
-    def delete_stack(self, stack_name=TESTSTACKNAME):
+    def delete_stack(self, stack_name=symbols_data.teststackname):
         '''Delete stack after x tries, waiting y seconds in between.'''
         self.client.stacks.delete(stack_name)
         max_tries = 10
