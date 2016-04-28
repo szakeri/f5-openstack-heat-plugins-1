@@ -18,21 +18,37 @@ import time
 from heatclient.v1.client import Client as HeatClient
 from keystoneclient.v2_0 import client as KeystoneClient
 
-from pytest import symbols as symbols_data
+import pytest
 
 
 
-class HeatClientMgr(object):
+#@pytest.fixture(scope="module")
+#def getKeystoneData(symbols):
+#    keystone = KeystoneClient.Client(
+#        password=symbols.tenant_password,
+#        username=symbols.username,
+#        tenant_name=symbols.tenant_name,
+#        auth_url=symbols.auth_url
+#    )
+#    return keystone
+
+
+class HeatClientMgr():
     '''Heat client class to manage a stack.'''
-    def __init__(self):
+    def __init__(self,symbols):
         keystone = KeystoneClient.Client(
-            username=symbols_data.username,
-            password=symbols_data.password,
-            tenant_name=symbols_data.tenant_name,
-            auth_url=symbols_data.auth_url
+            password=symbols.tenant_password,
+            username=symbols.username,
+            tenant_name=symbols.tenant_name,
+            auth_url=symbols.auth_url
         )
+#        print "json auth url is:", symbols.auth_url
+#        print "heat_endpoint", symbols.heat_endpoint
+#        print "bigip_ip", symbols.bigip_ip
+
+        self.teststackname = symbols.teststackname
         token = keystone.auth_ref['token']['id']
-        self.client = HeatClient(endpoint=symbols_data.heat_endpoint, token=token)
+        self.client = HeatClient(endpoint=symbols.heat_endpoint, token=token)
 
     def get_stack_status(self, stack_id):
         '''Return stack status.'''
@@ -63,7 +79,7 @@ class HeatClientMgr(object):
 
     def create_stack(self, **kwargs):
         '''Create stack with kwargs.'''
-        name = kwargs.pop('stack_name', symbols_data.teststackname)
+        name = kwargs.pop('stack_name', self.teststackname)
         template = kwargs['template']
         parameters = kwargs.get('parameters', {})
         self.client.stacks.create(
@@ -78,8 +94,10 @@ class HeatClientMgr(object):
         )
         return self.client.stacks.get(name)
 
-    def delete_stack(self, stack_name=symbols_data.teststackname):
+    def delete_stack(self, stack_name=None):
         '''Delete stack after x tries, waiting y seconds in between.'''
+        if not stack_name:
+            stack_name = self.teststackname
         self.client.stacks.delete(stack_name)
         max_tries = 10
         interval = 5

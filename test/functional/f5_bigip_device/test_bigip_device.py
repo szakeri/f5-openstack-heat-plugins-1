@@ -15,6 +15,7 @@
 
 import os
 import pytest
+from pytest import symbols
 
 import functional.heat_client_utils as hc_utils
 import functional.plugin_test_utils as utils
@@ -42,11 +43,11 @@ def test_create_failed_bad_password(HeatStack):
     )
 
 
-def test_create_bad_property():
+def test_create_bad_property(symbols):
     bad_property_template = utils.get_template_file(
         os.path.join(TEST_DIR, 'bad_property.yaml')
     )
     with pytest.raises(Exception) as ex:
-        hc = hc_utils.HeatClientMgr()
+        hc = hc_utils.HeatClientMgr(symbols)
         hc.create_stack(template=bad_property_template)
     assert 'Unknown Property bad_extra_prop' in ex.value.message

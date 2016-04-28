@@ -18,10 +18,11 @@ import heat_client_utils as hc_utils
 import plugin_test_utils as plugin_utils
 
 import pytest
+from pytest import symbols
 
 
 def create_stack(symbols, template, parameters={}):
-    hc = hc_utils.HeatClientMgr()
+    hc = hc_utils.HeatClientMgr(symbols)
     parameters.update(
         {'bigip_ip': symbols.bigip_ip, 'bigip_un': symbols.bigip_username, 'bigip_pw': symbols.bigip_password}
     )
@@ -40,19 +41,19 @@ def HeatStack(request, symbols):
 
         template = plugin_utils.get_template_file(template_file)
         hc, stack = create_stack(
-            symbols.bigip_ip , symbols.bigip_username, symbols.bigip_password, template, parameters
+            symbols, template, parameters
         )
         return hc, stack
     return manage_stack
 
 
 @pytest.fixture
-def HeatStackNoTeardown(symbols, request):
+def HeatStackNoTeardown(request, symbols):
     '''Heat stack fixture for creating/deleting a heat stack.'''
     def manage_stack(template_file):
         template = plugin_utils.get_template_file(template_file)
         hc, stack = create_stack(
-            symbols.bigip_ip, symbols.bigip_username, symbols.bigip_password, template
+            symbols, template
         )
 
         return hc, stack
@@ -60,16 +61,17 @@ def HeatStackNoTeardown(symbols, request):
 
 
 @pytest.fixture
-def HeatStackNoParams(request):
+def HeatStackNoParams(request, symbols):
     '''Heat stack fixture which gives no params to create_stack.'''
     def manage_stack(template_file):
+        template = plugin_utils.get_template_file(template_file)
+        hc = hc_utils.HeatClientMgr(symbols)
+        stack = hc.create_stack(template=template)
+
         def teardown():
             hc.delete_stack()
         request.addfinalizer(teardown)
 
-        template = plugin_utils.get_template_file(template_file)
-        hc = hc_utils.HeatClientMgr()
-        stack = hc.create_stack(template=template)
         return hc, stack
     return manage_stack
 
