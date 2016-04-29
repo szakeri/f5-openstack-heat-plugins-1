@@ -18,20 +18,6 @@ import time
 from heatclient.v1.client import Client as HeatClient
 from keystoneclient.v2_0 import client as KeystoneClient
 
-import pytest
-
-
-
-#@pytest.fixture(scope="module")
-#def getKeystoneData(symbols):
-#    keystone = KeystoneClient.Client(
-#        password=symbols.tenant_password,
-#        username=symbols.username,
-#        tenant_name=symbols.tenant_name,
-#        auth_url=symbols.auth_url
-#    )
-#    return keystone
-
 
 class HeatClientMgr():
     '''Heat client class to manage a stack.'''
@@ -42,10 +28,6 @@ class HeatClientMgr():
             tenant_name=symbols.tenant_name,
             auth_url=symbols.auth_url
         )
-#        print "json auth url is:", symbols.auth_url
-#        print "heat_endpoint", symbols.heat_endpoint
-#        print "bigip_ip", symbols.bigip_ip
-
         self.teststackname = symbols.teststackname
         token = keystone.auth_ref['token']['id']
         self.client = HeatClient(endpoint=symbols.heat_endpoint, token=token)
