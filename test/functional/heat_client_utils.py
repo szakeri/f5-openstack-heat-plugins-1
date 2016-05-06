@@ -19,18 +19,26 @@ from heatclient.v1.client import Client as HeatClient
 from keystoneclient.v2_0 import client as KeystoneClient
 
 
-class HeatClientMgr():
+class HeatClientMgr(object):
     '''Heat client class to manage a stack.'''
-    def __init__(self,symbols):
+    def __init__(
+            self,
+            username,
+            tenant_password,
+            tenant_name,
+            auth_url,
+            teststackname,
+            heat_endpoint):
         keystone = KeystoneClient.Client(
-            password=symbols.tenant_password,
-            username=symbols.username,
-            tenant_name=symbols.tenant_name,
-            auth_url=symbols.auth_url
+            username=username,
+            password=tenant_password,
+            tenant_name=tenant_name,
+            auth_url=auth_url
         )
-        self.teststackname = symbols.teststackname
+        self.teststackname = teststackname
+        self.heat_endpoint = heat_endpoint
         token = keystone.auth_ref['token']['id']
-        self.client = HeatClient(endpoint=symbols.heat_endpoint, token=token)
+        self.client = HeatClient(endpoint=self.heat_endpoint, token=token)
 
     def get_stack_status(self, stack_id):
         '''Return stack status.'''
@@ -48,6 +56,7 @@ class HeatClientMgr():
             interval=2):
         '''Wait until user-defined status is reached.'''
         count = 0
+        status = None
         while count <= max_tries:
             time.sleep(interval)
             status = self.get_stack_status(stack_id)
